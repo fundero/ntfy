@@ -2,15 +2,14 @@ name: ntfy.sh Notifications
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, master, staging ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master, staging ]
   release:
     types: [ published ]
   workflow_run:
-    workflows: ["CI", "Build", "Test"]
+    workflows: ["CI", "Build", "Test", "Deploy"]
     types: [ completed ]
-  # Build durumları için
   check_run:
     types: [ completed ]
   check_suite:
@@ -22,40 +21,27 @@ jobs:
     if: always()
     
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      
+    - name: Download ntfy manager files
+      run: |
+        mkdir -p ntfy-tools
+        # GitHub Raw API kullanarak dosyaları indir
+        curl -L -o ntfy-tools/ntfy-manager.py https://raw.githubusercontent.com/fundero/ntfy/main/ntfy-manager.py
+        curl -L -o ntfy-tools/ntfy-manager.json https://raw.githubusercontent.com/fundero/ntfy/main/ntfy-manager.json
+        chmod +x ntfy-tools/ntfy-manager.py
+        
     - name: Install uv
       uses: astral-sh/setup-uv@v3
       with:
         version: "latest"
         
     - name: Install dependencies
+      working-directory: ./ntfy-tools
       run: |
         uv add requests
         
-    - name: Setup ntfy manager
-      run: |
-        chmod +x ntfy-manager.py
-        
-    - name: Configure notifications
-      env:
-        REPO_NAME: ${{ github.repository }}
-        IS_PRIVATE: ${{ github.event.repository.private }}
-      run: |
-        repo_name=$(basename "$REPO_NAME")
-        
-        # Eğer ntfy-manager.json yoksa ya da bu repo kayıtlı değilse ekle
-        if [ ! -f "ntfy-manager.json" ] || ! uv run python ./ntfy-manager.py list | grep -q "$repo_name"; then
-          if [ "$IS_PRIVATE" = "true" ]; then
-            uv run python ./ntfy-manager.py add-repo "$repo_name" --private
-          else
-            uv run python ./ntfy-manager.py add-repo "$repo_name"
-          fi
-        fi
-        
     - name: Send push notification
       if: github.event_name == 'push'
+      working-directory: ./ntfy-tools
       env:
         REPO_NAME: ${{ github.repository }}
         COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
@@ -68,6 +54,7 @@ jobs:
         
     - name: Send PR notification
       if: github.event_name == 'pull_request'
+      working-directory: ./ntfy-tools
       env:
         REPO_NAME: ${{ github.repository }}
         PR_TITLE: ${{ github.event.pull_request.title }}
@@ -80,6 +67,7 @@ jobs:
         
     - name: Send release notification
       if: github.event_name == 'release'
+      working-directory: ./ntfy-tools
       env:
         REPO_NAME: ${{ github.repository }}
         RELEASE_TAG: ${{ github.event.release.tag_name }}
@@ -91,6 +79,7 @@ jobs:
         
     - name: Send workflow completion notification
       if: github.event_name == 'workflow_run'
+      working-directory: ./ntfy-tools
       env:
         REPO_NAME: ${{ github.repository }}
         WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
@@ -108,6 +97,7 @@ jobs:
         
     - name: Send build notification
       if: github.event_name == 'check_run' || github.event_name == 'check_suite'
+      working-directory: ./ntfy-tools
       env:
         REPO_NAME: ${{ github.repository }}
         CHECK_STATUS: ${{ github.event.check_run.conclusion || github.event.check_suite.conclusion }}
@@ -121,7 +111,7 @@ jobs:
           message="❌ Build failed: $CHECK_NAME"
           priority="urgent"
         else
-          message="⚠️ Build $CHECK_STATUS: $CHECK_NAME"
+          message="⚠️ Build $CHECK_STATUS: $CHECK_STATUS"
           priority="default"
         fi
         uv run python ./ntfy-manager.py send "$repo_name" build "$message" --priority "$priority"

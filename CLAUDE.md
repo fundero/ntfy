@@ -20,6 +20,38 @@ This is a Python-based notification manager for ntfy.sh that helps manage build 
 uv add requests
 ```
 
+### Usage Models
+
+**1. Centralized Management (Local Development)**
+- Tek `ntfy-manager.json` dosyası ile multiple repository'leri yönet
+- Local development environment'ta ideal
+- Tüm projelerinizi tek yerden kontrol edin
+
+**2. Repository-Specific (CI/CD)**
+- Her repository kendi `ntfy-manager.json` dosyasını tutar
+- GitHub Actions ve CI/CD pipeline'ları için ideal
+- Repository isolation sağlar
+
+### Repository Setup for GitHub Actions
+
+**🎯 Recommended: Centralized Approach**
+Python dosyaları merkezi repository'de kalır, sadece workflow kopyalanır:
+
+```bash
+# 1. Repository'yi merkezi config'e ekle (eğer yoksa)
+uv run python ./ntfy-manager.py add-repo mvp-api --private
+
+# 2. Sadece workflow'u kopyala (Python dosyaları kopyalanmaz!)
+./setup-simple-ntfy.sh mvp-api /path/to/mvp-api
+
+# 3. Target repository'de commit ve push
+cd /path/to/mvp-api
+git add .github/workflows/ntfy-notifications.yml
+git commit -m "Add ntfy.sh notification workflow"
+git push
+```
+
+
 ### Core Commands
 ```bash
 # Repository management
