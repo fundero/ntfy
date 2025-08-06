@@ -45,6 +45,21 @@
           "enabled": true,
           "priority": "urgent",
           "title": "Error Alert"
+        },
+        "push": {
+          "enabled": true,
+          "priority": "default",
+          "title": "Push Notification"
+        },
+        "pr": {
+          "enabled": true,
+          "priority": "default",
+          "title": "Pull Request"
+        },
+        "release": {
+          "enabled": true,
+          "priority": "high",
+          "title": "Release"
         }
       }
     },
@@ -71,6 +86,21 @@
           "enabled": true,
           "priority": "urgent",
           "title": "Error Alert"
+        },
+        "push": {
+          "enabled": true,
+          "priority": "default",
+          "title": "Push Notification"
+        },
+        "pr": {
+          "enabled": true,
+          "priority": "default",
+          "title": "Pull Request"
+        },
+        "release": {
+          "enabled": true,
+          "priority": "high",
+          "title": "Release"
         }
       }
     }
