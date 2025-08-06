@@ -37,6 +37,7 @@ jobs:
     - name: Install dependencies
       working-directory: ./ntfy-tools
       run: |
+        uv init --name ntfy-tools --no-readme
         uv add requests
         
     - name: Send push notification
