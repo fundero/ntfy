@@ -20,7 +20,11 @@ fi
 # requests kütüphanesi kontrolü ve kurulumu
 if ! python3 -c "import requests" 2>/dev/null; then
     echo -e "${YELLOW}📦 requests kütüphanesi kuruluyor...${NC}"
-    pip3 install requests
+    if command -v uv &> /dev/null; then
+        uv add requests
+    else
+        pip3 install requests
+    fi
 fi
 
 echo -e "${GREEN}✅ Gereksinimler tamam${NC}"

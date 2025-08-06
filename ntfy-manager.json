@@ -47,6 +47,32 @@
           "title": "Error Alert"
         }
       }
+    },
+    "mvp-ui": {
+      "topic": "dev-11676451",
+      "is_private": true,
+      "events": {
+        "build": {
+          "enabled": true,
+          "priority": "default",
+          "title": "Build Status"
+        },
+        "deploy": {
+          "enabled": true,
+          "priority": "high",
+          "title": "Deployment"
+        },
+        "test": {
+          "enabled": false,
+          "priority": "low",
+          "title": "Test Results"
+        },
+        "error": {
+          "enabled": true,
+          "priority": "urgent",
+          "title": "Error Alert"
+        }
+      }
     }
   },
   "global_settings": {
