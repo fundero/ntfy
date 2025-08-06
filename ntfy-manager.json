@@ -1,0 +1,57 @@
+{
+  "default_server": "ntfy.sh",
+  "default_topic_prefix": "dev",
+  "repositories": {
+    "example-repo": {
+      "topic": "dev-example",
+      "events": {
+        "build": {
+          "enabled": true,
+          "priority": "default",
+          "title": "Build Status"
+        },
+        "deploy": {
+          "enabled": true,
+          "priority": "high",
+          "title": "Deployment"
+        },
+        "test": {
+          "enabled": false,
+          "priority": "low",
+          "title": "Test Results"
+        }
+      }
+    },
+    "mvp-api": {
+      "topic": "dev-9c550a27",
+      "is_private": true,
+      "events": {
+        "build": {
+          "enabled": true,
+          "priority": "default",
+          "title": "Build Status"
+        },
+        "deploy": {
+          "enabled": true,
+          "priority": "high",
+          "title": "Deployment"
+        },
+        "test": {
+          "enabled": false,
+          "priority": "low",
+          "title": "Test Results"
+        },
+        "error": {
+          "enabled": true,
+          "priority": "urgent",
+          "title": "Error Alert"
+        }
+      }
+    }
+  },
+  "global_settings": {
+    "auth_token": "",
+    "default_priority": "default",
+    "emoji_enabled": true
+  }
+}

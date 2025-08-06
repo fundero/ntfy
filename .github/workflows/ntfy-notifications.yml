@@ -1,0 +1,100 @@
+name: ntfy.sh Notifications
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+  workflow_run:
+    workflows: ["CI", "Build", "Test"]
+    types: [ completed ]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+        
+    - name: Install dependencies
+      run: |
+        pip install requests
+        
+    - name: Setup ntfy manager
+      run: |
+        # ntfy-manager dosyalarını kopyala veya wget ile indir
+        # Bu örnekte repository içinde olduğu varsayılıyor
+        chmod +x ntfy-manager.py
+        
+    - name: Configure notifications
+      env:
+        REPO_NAME: ${{ github.repository }}
+        IS_PRIVATE: ${{ github.event.repository.private }}
+      run: |
+        repo_name=$(basename "$REPO_NAME")
+        if [ "$IS_PRIVATE" = "true" ]; then
+          ./ntfy-manager.py add-repo "$repo_name" --private
+        else
+          ./ntfy-manager.py add-repo "$repo_name"
+        fi
+        
+    - name: Send push notification
+      if: github.event_name == 'push'
+      env:
+        REPO_NAME: ${{ github.repository }}
+        COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        BRANCH: ${{ github.ref_name }}
+        ACTOR: ${{ github.actor }}
+      run: |
+        repo_name=$(basename "$REPO_NAME")
+        message="🔀 Push to $BRANCH by $ACTOR: $COMMIT_MESSAGE"
+        ./ntfy-manager.py send "$repo_name" push "$message"
+        
+    - name: Send PR notification
+      if: github.event_name == 'pull_request'
+      env:
+        REPO_NAME: ${{ github.repository }}
+        PR_TITLE: ${{ github.event.pull_request.title }}
+        PR_ACTION: ${{ github.event.action }}
+        ACTOR: ${{ github.actor }}
+      run: |
+        repo_name=$(basename "$REPO_NAME")
+        message="📝 PR $PR_ACTION by $ACTOR: $PR_TITLE"
+        ./ntfy-manager.py send "$repo_name" pr "$message"
+        
+    - name: Send release notification
+      if: github.event_name == 'release'
+      env:
+        REPO_NAME: ${{ github.repository }}
+        RELEASE_TAG: ${{ github.event.release.tag_name }}
+        RELEASE_NAME: ${{ github.event.release.name }}
+      run: |
+        repo_name=$(basename "$REPO_NAME")
+        message="🚀 Release $RELEASE_TAG: $RELEASE_NAME"
+        ./ntfy-manager.py send "$repo_name" release "$message" --priority high
+        
+    - name: Send workflow completion notification
+      if: github.event_name == 'workflow_run'
+      env:
+        REPO_NAME: ${{ github.repository }}
+        WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+        WORKFLOW_STATUS: ${{ github.event.workflow_run.conclusion }}
+      run: |
+        repo_name=$(basename "$REPO_NAME")
+        if [ "$WORKFLOW_STATUS" = "success" ]; then
+          message="✅ $WORKFLOW_NAME completed successfully"
+          priority="default"
+        else
+          message="❌ $WORKFLOW_NAME failed"
+          priority="high"
+        fi
+        ./ntfy-manager.py send "$repo_name" workflow "$message" --priority "$priority"
